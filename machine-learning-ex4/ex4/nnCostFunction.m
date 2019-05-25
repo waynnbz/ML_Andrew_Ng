@@ -53,7 +53,9 @@ for i = 1:m,
 
 end;
 
-  J = 1/m * J;
+theta_sumsq = sum(sumsq(Theta1(:,[2:end]))) + sum(sumsq(Theta2(:,[2:end])));
+
+J = 1/m * J + lambda/(2*m) * theta_sumsq;
 
 
 % Part 2: Implement the backpropagation algorithm to compute the gradients
