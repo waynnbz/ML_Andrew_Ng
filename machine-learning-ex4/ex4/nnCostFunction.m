@@ -42,20 +42,37 @@ Theta2_grad = zeros(size(Theta2));
 
 for i = 1:m,
 
-	a1 = X(i,:)';
-	a2 = sigmoid(Theta1*[1;a1]);
-	h = sigmoid(Theta2*[1;a2]);
+	a1 = [1;X(i,:)']; %first activation ((input_layer_size + 1) X 1)
+	a2 = [1;sigmoid(Theta1*a1)]; %second activation ((hidden_layer_size + 1) X 1)
+	h = sigmoid(Theta2*a2); %third activation (num_labels X 1)
 
-	label = zeros(num_labels,1);
-  label(y(i)) = 1;
+	label = zeros(num_labels,1); %Initialize vector (num_labels X 1)
+  label(y(i)) = 1; %Label yth element {0;0;0;0;1;0;0;0;0;0}
 
-	J += sum(-label.*log(h) - (1-label).*log(1-h));
+  %backpropagation
+  delta3 = h - label; % num_labels X 1
+  delta2 = Theta2'*delta3.*a2.*(1-a2); % (hidden_layer_size + 1) X 1
+
+  %delta matrix "accumulator"
+  Theta2_grad += 1/m * delta3*a2'; % num_labels X (hidden_layer_size + 1)
+  Theta1_grad += 1/m * delta2(2:end)*a1'; %hidden_layer_size X (input_layer_size + 1)
+
+  %cost function
+	J += 1/m * sum(-label.*log(h) - (1-label).*log(1-h));
 
 end;
 
+%regularized term: square sum of all theta terms excluding bias terms
 theta_sumsq = sum(sumsq(Theta1(:,[2:end]))) + sum(sumsq(Theta2(:,[2:end])));
 
-J = 1/m * J + lambda/(2*m) * theta_sumsq;
+%add regularized term to cost function
+J += lambda/(2*m) * theta_sumsq;
+
+
+%add regularized term to theta gradients
+Theta2_grad += lambda/m *[zeros(size(Theta2),1),Theta2(:,[2:end])];
+Theta1_grad += lambda/m *[zeros(size(Theta1),1),Theta1(:,[2:end])];
+%setting the first col of theta to zeros so the bias units dont add up
 
 
 % Part 2: Implement the backpropagation algorithm to compute the gradients
